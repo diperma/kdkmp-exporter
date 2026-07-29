@@ -1,0 +1,7 @@
+# Shorter job TTL to stay under the free Upstash KV quota
+
+A real "Semua kategori" job stalled at 20/30 provinces in production. Root cause, found via QStash's event log: the 10 stuck steps were all failing with `ERR DB capacity quota exceeded (256MB)` on every write to KV. Not a code bug — the free Upstash Redis plan caps total database size at 256MB, and the accumulated job data (23 jobs, several from repeated "all"-scope testing earlier the same day, each ~15-20MB once the per-item export grew to 29 columns) had filled it. The 24h job TTL meant none of that test data had expired yet.
+
+**Decision: cut `JOB_TTL_SECONDS` from 24h to 3h.** Long enough to finish a job (minutes) and download it a couple of times afterward; short enough that a day of iterative use — including repeated full-national exports during testing — doesn't accumulate past the quota again.
+
+**Consequences:** a job link/id becomes unusable 3h after creation instead of 24h — acceptable since nothing in the UI persists a jobId across a page reload anyway (ADR-0002's polling is in-memory React state). If usage grows to the point where legitimate concurrent multi-user jobs regularly approach 256MB within a 3h window, the real fix is upgrading the Upstash plan, not shrinking the TTL further — a very short TTL fighting an undersized quota is a losing trade against correctness (a job could expire mid-run under load).

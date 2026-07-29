@@ -8,7 +8,16 @@ import {
   type StatusCategory,
 } from "./kdkmp.js";
 
-const JOB_TTL_SECONDS = 24 * 60 * 60;
+/**
+ * Short-lived on purpose. A single national "all" job stores ~15-20MB of row +
+ * point data across its keys (measured 2026-07-29, 29-item columns), and the
+ * free Upstash plan caps the whole database at 256MB. A handful of full-scope
+ * jobs left to sit at a 24h TTL exhausted the quota outright and stalled a
+ * real job mid-run (see docs/adr/0006-shorter-job-ttl-for-kv-quota.md) — 3h is
+ * long enough to finish a job and download it a couple of times, short enough
+ * that repeated large exports in a day don't accumulate.
+ */
+const JOB_TTL_SECONDS = 3 * 60 * 60;
 
 /**
  * KV values are capped (1MB per command on Upstash's free plan), and a single
