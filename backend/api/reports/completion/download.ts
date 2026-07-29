@@ -41,8 +41,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       return res.status(409).json({ error: "not_ready", message: "Job masih berjalan." });
     }
 
-    const stamp = new Date().toISOString().slice(0, 10);
-    const filename = `kdkmp-${meta.scope}-${stamp}.${format}`;
+    const filename = `Data_Koperasi_dan_Sarpras_${jakartaTimestamp()}.${format}`;
     res.setHeader("Content-Disposition", `attachment; filename="${filename}"`);
 
     if (format === "csv") {
@@ -78,4 +77,27 @@ async function* provinceBatches(jobId: string, summary: JobSummary): RowBatches 
   for (const province of summary.provinces) {
     yield await readProvinceRows(jobId, province.id, province.rowChunks ?? 0);
   }
+}
+
+/**
+ * `YYYY-MM-DD_HHMM` in WIB (Asia/Jakarta), matching the audience — not UTC.
+ * Deliberately doesn't include the scope: downloading two different
+ * categories in the same minute will collide on filename, but the browser's
+ * own "(1)" suffixing on repeat downloads already handles that.
+ */
+function jakartaTimestamp(): string {
+  const parts = Object.fromEntries(
+    new Intl.DateTimeFormat("en-CA", {
+      timeZone: "Asia/Jakarta",
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+      hour: "2-digit",
+      minute: "2-digit",
+      hourCycle: "h23",
+    })
+      .formatToParts(new Date())
+      .map((part) => [part.type, part.value]),
+  );
+  return `${parts.year}-${parts.month}-${parts.day}_${parts.hour}${parts.minute}`;
 }
