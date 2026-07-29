@@ -1,0 +1,21 @@
+{
+  "name": "kdkmp-exporter-backend",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "//serve": "Deliberately not named 'dev': vercel dev treats a 'dev' script as the Development Command and refuses to run, thinking it would invoke itself recursively.",
+    "serve": "vercel dev",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@upstash/qstash": "^2.7.20",
+    "@upstash/redis": "^1.34.3",
+    "exceljs": "^4.4.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.2",
+    "@vercel/node": "^5.0.0",
+    "typescript": "^5.7.2"
+  }
+}

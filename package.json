@@ -1,0 +1,19 @@
+{
+  "name": "kdkmp-exporter",
+  "private": true,
+  "version": "0.1.0",
+  "description": "Export Portal KDKMP data to XLSX/CSV",
+  "workspaces": [
+    "frontend",
+    "backend"
+  ],
+  "scripts": {
+    "dev:frontend": "npm run dev --workspace frontend",
+    "dev:backend": "npm run serve --workspace backend",
+    "build:frontend": "npm run build --workspace frontend",
+    "typecheck": "npm run typecheck --workspaces --if-present"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}
