@@ -220,11 +220,21 @@ export async function summariseJob(meta: JobMeta): Promise<JobSummary> {
   };
 }
 
-/** Mandatory items, in catalog order, read live so a changed catalog isn't baked in. */
-export function mandatoryItems(master: MasterSarprasItem[]): ReportItem[] {
+/**
+ * Every catalog item (all 29, all priority tiers — Mandatory through
+ * Secondary), read live so a changed catalog isn't baked in. Items without an
+ * `order` (newly added ones the portal hasn't ranked yet) sort after ranked
+ * ones, alphabetically among themselves, rather than colliding at position 0.
+ */
+export function allSarprasItems(master: MasterSarprasItem[]): ReportItem[] {
   return master
-    .filter((item) => item.priority === "Mandatory")
-    .sort((a, b) => (a.order ?? 0) - (b.order ?? 0))
+    .slice()
+    .sort((a, b) => {
+      if (a.order != null && b.order != null) return a.order - b.order;
+      if (a.order != null) return -1;
+      if (b.order != null) return 1;
+      return a.name.localeCompare(b.name);
+    })
     .map((item) => ({ id: item.id, name: item.name }));
 }
 

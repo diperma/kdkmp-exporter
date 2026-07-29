@@ -3,7 +3,8 @@
 Menarik data dari Portal KDKMP (`portalkdkmp.id`) dan mengunduhnya sebagai XLSX/CSV.
 
 Laporan pertama yang tersedia: **daftar koperasi per kategori kelengkapan sarpras**, lengkap
-dengan status dan nama vendor untuk tiap item Mandatory.
+dengan status dan nama vendor untuk **semua 29 jenis item** di katalog (`masterSarpras.list`),
+bukan cuma yang Mandatory.
 
 - `CLAUDE.md` — referensi API portal hasil reverse-engineering (spec lapisan data)
 - `CONTEXT.md` — glosarium istilah domain; baca ini sebelum bicara soal "100% lengkap"
@@ -106,6 +107,12 @@ Dua batas platform membentuk desainnya, dan keduanya terlampaui pada ekspor penu
 - **Respons Vercel maksimal 4,5MB kalau di-buffer** — file ditulis sebagai stream
   langsung ke respons, dibaca dari KV per provinsi, jadi tidak pernah ada satupun titik
   di mana seluruh laporan berada di memori.
+
+**Kolom per-item mencakup semua 29 jenis sarpras** (bukan cuma 5 Mandatory), diukur
+2026-07-29 pada skala "Semua kategori" (17.951 koperasi, 79 kolom): **CSV 14,68MB, XLSX
+5,86MB**, unduh masing-masing ~17 dan ~21 detik — jauh di bawah `maxDuration: 60` pada
+`vercel.json`. XLSX lebih hemat dari CSV secara proporsional karena kompresi zip-nya
+efektif untuk string vendor yang berulang.
 
 ## Catatan
 

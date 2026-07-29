@@ -35,7 +35,7 @@ What one export covers: a single **Sarpras Completion Tier**, or `all` — every
 _Avoid_: calling `all` a "category" or "tier" — it's the absence of a tier filter.
 
 **Priority** (Sarpras item attribute):
-Each Sarpras item type (from `masterSarpras.list`) has one of four priority levels — `Mandatory` > `High` > `Medium` > `Secondary` — which determines which Sarpras Completion Tier a Koperasi can reach. Membership has changed over time (see `CLAUDE.md` changelog) — re-verify before hardcoding which items are Mandatory.
+Each Sarpras item type (from `masterSarpras.list`, 29 items total) has one of four priority levels — `Mandatory` > `High` > `Medium` > `Secondary` — which determines which Sarpras Completion Tier a Koperasi can reach. Membership has changed over time (see `CLAUDE.md` changelog) — re-verify before hardcoding which items are Mandatory. **The per-item export columns cover all 29 items regardless of Priority** — Priority determines Tier membership, it does not gate what appears in a per-item report.
 
 **Requirement Set** (per-Koperasi):
 The set of Sarpras items a *specific* Koperasi is required to receive — an allocation, not a global list. Surfaced as `totalRequirementCount` / `completedRequirementCount` per Koperasi. **A Koperasi's Sarpras Completion Tier is evaluated against its own Requirement Set, not against the global Priority catalog.**

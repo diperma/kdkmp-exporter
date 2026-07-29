@@ -13,8 +13,8 @@ import {
 } from "../../../lib/kdkmp.js";
 import { enqueueProvinceSteps } from "../../../lib/queue.js";
 import {
+  allSarprasItems,
   buildColumns,
-  mandatoryItems,
   newJobId,
   saveJob,
   savePoints,
@@ -111,7 +111,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       });
     }
 
-    const items = mandatoryItems(master);
+    const items = allSarprasItems(master);
     const jobId = newJobId();
     const provinces: JobProvince[] = [];
 
