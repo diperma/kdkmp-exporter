@@ -7,6 +7,7 @@ import {
 } from "../../../lib/http.js";
 import { streamCsv, streamXlsx, type RowBatches } from "../../../lib/export.js";
 import {
+  deleteJob,
   readJob,
   readProvinceRows,
   SCOPE_LABELS,
@@ -15,11 +16,18 @@ import {
 } from "../../../lib/report.js";
 
 /**
- * Streams the finished report as XLSX (default) or CSV.
+ * Streams the finished report as XLSX (default) or CSV, then deletes the job's
+ * data from KV (ADR-0007) — a national export can occupy 15-20MB, and the free
+ * Upstash plan's 256MB quota has been exhausted before by leftover job data,
+ * so freeing it the moment it's actually been used matters more than a timer.
  *
  * Rows are pulled from KV a province at a time and written straight out — a
  * full national export is ~18k rows, too big to buffer into a single response
  * body on Vercel.
+ *
+ * Consequence: downloading both XLSX and CSV of one job means regenerating for
+ * the second format — the first download's cleanup removes the data the
+ * second would need.
  */
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   applyCors(req, res);
@@ -47,19 +55,27 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     if (format === "csv") {
       res.setHeader("Content-Type", "text/csv; charset=utf-8");
       await streamCsv(res, meta.columns, provinceBatches(meta.id, summary));
-      return;
+    } else {
+      res.setHeader(
+        "Content-Type",
+        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      );
+      await streamXlsx(
+        res,
+        meta.columns,
+        provinceBatches(meta.id, summary),
+        SCOPE_LABELS[meta.scope] ?? meta.scope,
+      );
     }
 
-    res.setHeader(
-      "Content-Type",
-      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-    );
-    await streamXlsx(
-      res,
-      meta.columns,
-      provinceBatches(meta.id, summary),
-      SCOPE_LABELS[meta.scope] ?? meta.scope,
-    );
+    // Streaming succeeded — free the KV quota now rather than waiting on the
+    // TTL. A cleanup failure here shouldn't turn a successful download into an
+    // error response, so it's logged rather than thrown.
+    try {
+      await deleteJob(meta, summary);
+    } catch (cleanupErr) {
+      console.error(`Gagal membersihkan job ${jobId} setelah download:`, cleanupErr);
+    }
   } catch (err) {
     // Once streaming has begun the status line is already sent; all we can do
     // is cut the response so the client sees a truncated download rather than a

@@ -84,7 +84,11 @@ Nama repo GitHub tidak boleh mengandung `%`; workflow memakai nama repo sebagai 
    `getCompleteMonitor` per provinsi berukuran ~11MB dan makan ~4 detik, terlalu berat
    untuk satu invocation ([ADR-0002](docs/adr/0002-background-job-for-heavy-per-koperasi-report.md)).
 3. Frontend polling `/status` tiap 2,5 detik sampai semua provinsi selesai.
-4. `/download?format=xlsx|csv` merakit file dari hasil yang tersimpan di KV.
+4. `/download?format=xlsx|csv` merakit file dari hasil yang tersimpan di KV, lalu **langsung
+   menghapus semua data job itu dari KV** begitu streaming selesai
+   ([ADR-0007](docs/adr/0007-delete-job-data-after-download.md)) — bukan menunggu TTL.
+   Konsekuensinya: mau unduh XLSX lalu CSV dari job yang sama berarti generate ulang untuk
+   yang kedua, karena yang pertama sudah menghapus datanya.
 
 Keanggotaan kategori selalu memakai `statusCategory` dari portal, tidak pernah dihitung
 ulang sendiri — lihat [ADR-0004](docs/adr/0004-trust-portal-statuscategory.md) untuk alasannya.

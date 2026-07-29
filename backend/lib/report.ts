@@ -9,15 +9,19 @@ import {
 } from "./kdkmp.js";
 
 /**
- * Short-lived on purpose. A single national "all" job stores ~15-20MB of row +
- * point data across its keys (measured 2026-07-29, 29-item columns), and the
- * free Upstash plan caps the whole database at 256MB. A handful of full-scope
- * jobs left to sit at a 24h TTL exhausted the quota outright and stalled a
- * real job mid-run (see docs/adr/0006-shorter-job-ttl-for-kv-quota.md) — 3h is
- * long enough to finish a job and download it a couple of times, short enough
- * that repeated large exports in a day don't accumulate.
+ * Safety-net only. The primary cleanup path is `deleteJob`, called right after
+ * a download finishes streaming — that frees the ~15-20MB a national "all" job
+ * occupies (the free Upstash plan caps the whole database at 256MB) within
+ * seconds of actual use, rather than waiting on a timer. This TTL only covers
+ * jobs that are abandoned before ever being downloaded. It has to stay well
+ * above how long a job can legitimately take to finish (QStash retries with
+ * backoff have taken several minutes under contention) — a TTL shorter than
+ * that would let a slow job's early-written `points` chunks expire before its
+ * last province is processed, silently producing zero rows for that province
+ * instead of an error. See docs/adr/0006-shorter-job-ttl-for-kv-quota.md and
+ * docs/adr/0007-delete-job-data-after-download.md.
  */
-const JOB_TTL_SECONDS = 3 * 60 * 60;
+const JOB_TTL_SECONDS = 60 * 60;
 
 /**
  * KV values are capped (1MB per command on Upstash's free plan), and a single
@@ -227,6 +231,37 @@ export async function summariseJob(meta: JobMeta): Promise<JobSummary> {
         : undefined,
     provinces,
   };
+}
+
+/**
+ * Removes every key belonging to a job — meta, per-province done markers, and
+ * all row/point chunks. Called right after a download finishes streaming
+ * (ADR-0007), so the ~15-20MB a national job occupies is freed within seconds
+ * of actual use rather than sitting until `JOB_TTL_SECONDS` expires.
+ *
+ * Takes the already-computed `summary` so it doesn't have to re-derive row
+ * chunk counts from KV — the caller already paid for that read to stream the
+ * download in the first place.
+ */
+export async function deleteJob(meta: JobMeta, summary: JobSummary): Promise<void> {
+  const keys: string[] = [metaKey(meta.id)];
+
+  for (const province of meta.provinces) {
+    keys.push(doneKey(meta.id, province.id));
+    for (let i = 0; i < province.pointChunks; i++) {
+      keys.push(pointsKey(meta.id, province.id, i));
+    }
+  }
+  for (const province of summary.provinces) {
+    for (let i = 0; i < (province.rowChunks ?? 0); i++) {
+      keys.push(rowsKey(meta.id, province.id, i));
+    }
+  }
+
+  // Redis command size limits apply even to DEL — batch rather than one giant call.
+  for (let i = 0; i < keys.length; i += 200) {
+    await kv.del(...keys.slice(i, i + 200));
+  }
 }
 
 /**
