@@ -120,7 +120,7 @@ Whatever is chosen, the fetch layer should isolate the cookie-attachment logic b
 ### New/unconfirmed — `/pengiriman-sarpras` (appeared 2026-07-28, needs more probing)
 | Procedure | Params | Notes |
 |---|---|---|
-| `pengirimanSarpras.getDataSarprasDashboard` | `kodamId`, `provinceKode` | Headline cards: Target Nasional, Lahan Terverifikasi, Sedang Dibangun, Selesai Dibangun |
+| `pengirimanSarpras.getDataSarprasDashboard` | `kodamId`, `provinceKode` (both required non-null strings — omit key entirely to mean "all", not `null`; **`provinceKode` is the BPS 2-digit code from `wilayah.searchProvinces`'s `kode` field, e.g. `"33"` for Jawa Tengang — NOT the opaque `id`/`value` used everywhere else**) | Returns `{summary, villages[], kodimShipmentAnalytics}`. `summary`/each village has `totalKoperasi`, `koperasiLengkap`, `koperasiBelumLengkap`. **Confirmed 2026-07-29: `koperasiLengkap` is 0 in literally every one of 35,966 villages nationally** — it tracks the strict "all 29 sarpras items" bar (same as `laporanVendor`'s Complete-All/Biru tier, also 0 nationwide), not Mandatory-Complete/Hijau. Also covers a much larger population (35,969 koperasi) than `laporanVendor.getVendorReportedKoperasiMap` (17,927) — likely "koperasi selesai dibangun" generally, not just ones with a vendor report. **Not useful for a per-province Hijau/Mandatory-Complete breakdown** — see CONTEXT.md's note on this. |
 | `pengirimanSarpras.getKodimWithCompletedKoperasi` | `kodamId`, `provinceKode` | Table data, likely paginated — **not yet fully explored, check for a per-koperasi detail companion endpoint** |
 | `pemetaan.getStatistikVerified` | — | Verified land stats |
 

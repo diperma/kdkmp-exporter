@@ -8,6 +8,7 @@ import {
   SessionExpiredError,
   type CompletionSummary,
   type JobStatus,
+  type ProvinceSummary,
 } from "../lib/api.js";
 
 /**
@@ -29,6 +30,15 @@ const SCOPES = [
     tone: "oranye",
   },
   { value: "complete_all", label: "Semua sarpras lengkap (Biru)", heavy: false, tone: "biru" },
+] as const;
+
+/** Short column headers for the per-province table — full labels live in SCOPES. */
+const TIER_COLUMNS = [
+  { value: "mandatory_complete", short: "Hijau", tone: "hijau" },
+  { value: "partial", short: "Kuning", tone: "kuning" },
+  { value: "below_10", short: "Merah", tone: "merah" },
+  { value: "secondary_complete", short: "Oranye", tone: "oranye" },
+  { value: "complete_all", short: "Biru", tone: "biru" },
 ] as const;
 
 const POLL_INTERVAL_MS = 2500;
@@ -118,6 +128,48 @@ function SummaryDashboard({
           ))}
         </div>
       )}
+
+      {summary && summary.byProvince.length > 0 && (
+        <ProvinceTable provinces={summary.byProvince} />
+      )}
+    </div>
+  );
+}
+
+/**
+ * No portal endpoint gives this breakdown directly (checked 2026-07-29 — see
+ * CONTEXT.md); it's computed from the same national fetch the cards above
+ * already use, just grouped by province instead of summed nationally.
+ */
+function ProvinceTable({ provinces }: { provinces: ProvinceSummary[] }) {
+  return (
+    <div className="province-table-wrap">
+      <table className="province-table">
+        <thead>
+          <tr>
+            <th>Provinsi</th>
+            <th>Total</th>
+            {TIER_COLUMNS.map((tier) => (
+              <th key={tier.value} className={`tier-th tier-th--${tier.tone}`}>
+                {tier.short}
+              </th>
+            ))}
+          </tr>
+        </thead>
+        <tbody>
+          {provinces.map((province) => (
+            <tr key={province.label}>
+              <td>{province.label}</td>
+              <td>{province.total.toLocaleString("id-ID")}</td>
+              {TIER_COLUMNS.map((tier) => (
+                <td key={tier.value}>
+                  {(province.counts[tier.value] ?? 0).toLocaleString("id-ID")}
+                </td>
+              ))}
+            </tr>
+          ))}
+        </tbody>
+      </table>
     </div>
   );
 }

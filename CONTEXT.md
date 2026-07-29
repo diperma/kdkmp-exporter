@@ -53,6 +53,8 @@ Both directions are explained by the Requirement Set: some `mandatory_complete` 
 
 **Consequence: treat the portal's own `statusCategory` as the source of truth for tier membership.** Per-item columns in an export should report raw delivered/not-delivered status per item (factual), never a derived "lengkap/belum" verdict of our own.
 
+**No portal endpoint gives a per-province Tier breakdown directly** (checked 2026-07-29). `pengirimanSarpras.getDataSarprasDashboard` looks like a match — it has `koperasiLengkap`/`koperasiBelumLengkap` per desa — but its `koperasiLengkap` is 0 in every village nationally, because it tracks Complete-All (Biru), not Mandatory-Complete (Hijau). It also covers a different, larger population (35,969 koperasi vs 17,927) than the vendor-report endpoints, so don't mix the two without understanding which "universe" of koperasi each one counts. A per-province Tier breakdown has to be computed ourselves by grouping `laporanVendor.getVendorReportedKoperasiMap`'s `points` by `provinceNama` — the same data the exporter already fetches for the national tally.
+
 ## Example dialogue
 
 > **Dev:** Bikin laporan koperasi yang udah 100%.

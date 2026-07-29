@@ -69,9 +69,16 @@ export interface StartJobResult {
   mode?: "inline" | "queued";
 }
 
+export interface ProvinceSummary {
+  label: string;
+  total: number;
+  counts: Record<string, number>;
+}
+
 export interface CompletionSummary {
   total: number;
   counts: Record<string, number>;
+  byProvince: ProvinceSummary[];
   computedAt: number;
 }
 

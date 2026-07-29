@@ -254,3 +254,60 @@ button.link {
 .tier-card--biru {
   border-left-color: #2563eb;
 }
+
+/* ~30 provinces plus 7 columns doesn't fit 720px reliably — scroll both axes
+   independently rather than letting the table blow out the page layout. */
+.province-table-wrap {
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid var(--border);
+  max-height: 340px;
+  overflow: auto;
+}
+
+.province-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+  white-space: nowrap;
+}
+
+.province-table th,
+.province-table td {
+  padding: 6px 10px;
+  text-align: right;
+  border-bottom: 1px solid var(--border);
+}
+
+.province-table th:first-child,
+.province-table td:first-child {
+  text-align: left;
+}
+
+.province-table thead th {
+  position: sticky;
+  top: 0;
+  background: var(--surface);
+  font-weight: 600;
+  color: var(--muted);
+}
+
+.tier-th--hijau {
+  color: #16a34a;
+}
+
+.tier-th--kuning {
+  color: #b45309;
+}
+
+.tier-th--merah {
+  color: #dc2626;
+}
+
+.tier-th--oranye {
+  color: #f97316;
+}
+
+.tier-th--biru {
+  color: #2563eb;
+}
