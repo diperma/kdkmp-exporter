@@ -18,7 +18,7 @@ export function enqueueProvinceSteps(options: {
 }): Promise<unknown[]> {
   const client = new Client({ token: requireEnv("QSTASH_TOKEN") });
   const base = requireEnv("PUBLIC_BASE_URL").replace(/\/$/, "");
-  const url = `${base}/api/reports/mandatory-complete/step`;
+  const url = `${base}/api/reports/completion/step`;
 
   return Promise.all(
     options.provinceIds.map((provinceId) =>

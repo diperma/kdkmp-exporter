@@ -69,6 +69,17 @@ export interface StartJobResult {
   mode?: "inline" | "queued";
 }
 
+export interface CompletionSummary {
+  total: number;
+  counts: Record<string, number>;
+  computedAt: number;
+}
+
+/** Read-only tier counts for the dashboard cards — never creates a job. */
+export function getCompletionSummary(): Promise<CompletionSummary> {
+  return json<CompletionSummary>("/api/reports/completion/summary");
+}
+
 export function startReport(scope: string): Promise<StartJobResult> {
   return json<StartJobResult>("/api/reports/completion/start", {
     method: "POST",
