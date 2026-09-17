@@ -1,0 +1,19 @@
+name: Keep KV database alive
+
+# Upstash's free plan deletes a database after a long stretch with no traffic
+# — the previous one vanished (DNS returned NXDOMAIN, not just a timeout)
+# after ~7 weeks of nobody using the app. This pings a cheap backend endpoint
+# on a schedule so the database always looks active, regardless of whether a
+# person actually opens the app. Every 3 days leaves a wide safety margin
+# under the ~49-day window that triggered the real incident.
+on:
+  schedule:
+    - cron: "0 3 */3 * *"
+  workflow_dispatch:
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping keepalive endpoint
+        run: curl --fail --silent --show-error "${{ vars.API_BASE_URL }}/api/health/keepalive"
