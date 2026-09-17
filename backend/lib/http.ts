@@ -20,6 +20,11 @@ export function applyCors(req: VercelRequest, res: VercelResponse): void {
   }
   res.setHeader("Access-Control-Allow-Methods", "GET,POST,OPTIONS");
   res.setHeader("Access-Control-Allow-Headers", "Content-Type,Authorization");
+  // Cross-origin fetch() hides all response headers from JS by default except
+  // a small "safe" set — Content-Disposition isn't in it, so without this the
+  // download's filename parsing in frontend/src/lib/api.ts silently falls
+  // back to a generic name instead of the one the server actually sent.
+  res.setHeader("Access-Control-Expose-Headers", "Content-Disposition");
   res.setHeader("Access-Control-Max-Age", "86400");
 }
 
